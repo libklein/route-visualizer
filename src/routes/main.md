@@ -1,11 +1,14 @@
 # RV - A simple route visualizer
 
 RV is a simple route visualizer that allows you to easily visualize routes.
+The minimal input is list of routes, which each contain a list of coordinates.
+The generated html can run without a server, allowing to generate visualizations with simple curl requests.
+These urls could be the, e.g., the output of an optimization algorithm.
 
 ## Features
 
 * Pass locations in the URL - opening the link will render the map
-* Pass additional attributes (metadata) via POST
+* Pass additional attributes (metadata, styles, etc.) via POST
 * Render routes based on additional attributes
 
 ## Usage
@@ -15,18 +18,5 @@ RV is a simple route visualizer that allows you to easily visualize routes.
 ### Page slug structure
 
 Routes are separated by `/`, coordinates of individual locations by `|`.
-Routes can optionally be colored.
+Routes can optionally be colored by appending ';color' to the route.
 
-* lng1,lat1
-
-### Query parameters
-
-Query parameters can 
-
-## Advanced usage
-
-```bash 
-https https://rv.libklein.com/render/
-```
-
-* Metadata
