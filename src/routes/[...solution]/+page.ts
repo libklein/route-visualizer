@@ -88,6 +88,8 @@ export const load: PageLoad = ({ params }) => {
   // return {
   //   solution: generateSolution(2)
   // }
+  const sol = generateSolution(3)
+  console.log("http://localhost:5173/" + sol.routes.map(route => route.drops.map(({ location: { lat, lng } }) => `${lat},${lng}`).join("|")).join("/"))
   return {
     solution: parse_slug(params.solution)
   }
