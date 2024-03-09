@@ -4,6 +4,7 @@
 	import { LineLayer, GeoJSON, MapLibre, Marker, Popup } from 'svelte-maplibre';
 	import maplibregl from 'maplibre-gl';
 	import type { Route, Solution, LngLat, Drop } from '$lib';
+	import SolutionSettings from '../SolutionSettings.svelte';
 
 	function getColor(index: number): string {
 		const colors = ['red', 'blue', 'green', 'brown', 'yellow', 'black', 'violet', 'pink'];
@@ -34,6 +35,7 @@
 	}
 
 	function preprocessSolution(solution: Solution): Solution {
+		solution = _.cloneDeep(solution);
 		return { routes: _.map(solution.routes, preprocessRoute) };
 	}
 
@@ -48,11 +50,11 @@
 		};
 	}
 
-	function fitMapView(drops: Drop[]) {
-		const bounds = _(drops)
-			.map('location')
-			.flatten()
-			.reduce((bounds, coords) => bounds.extend(coords), new maplibregl.LngLatBounds());
+	function fitMapView(coordinates: LngLat[]) {
+		const bounds = _(coordinates).reduce(
+			(bounds, coords) => bounds.extend(coords),
+			new maplibregl.LngLatBounds()
+		);
 
 		map?.fitBounds(bounds, {
 			padding: 50,
@@ -67,37 +69,42 @@
 	let preprocessedSolution: Solution;
 	let routes: Route[];
 	let drops: Drop[];
+	let coordinates: LngLat[];
 	$: preprocessedSolution = preprocessSolution(solution);
 	$: routes = preprocessedSolution?.routes ?? [];
 	$: drops = preprocessedSolution?.routes.flatMap((r) => r.drops);
-	$: drops && map && fitMapView(drops);
+	$: coordinates = _(drops).map('location').flatten().value();
+	$: coordinates && map && fitMapView(coordinates);
 </script>
 
-<MapLibre
-	bind:map
-	style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-	class="relative w-full aspect-[9/16] max-h-[70vh] sm:max-h-full sm:aspect-video"
-	standardControls
->
-	{#each routes as route}
-		<GeoJSON data={createGeoJSONLayer(route)}>
-			<LineLayer layout={route.style.layout} paint={route.style.paint}></LineLayer>
-		</GeoJSON>
-		{#each route.drops as drop, index}
-			<Marker lngLat={drop.location}>
-				<span style={styleToCss(drop.style)}></span>
-				{#if drop.metadata}
-					<Popup>
-						{JSON.stringify(drop.metadata)}
+<div class="container flex flex-col">
+	<SolutionSettings bind:solution={preprocessedSolution}></SolutionSettings>
+	<MapLibre
+		bind:map
+		style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+		class="relative w-full aspect-[9/16] max-h-[70vh] sm:max-h-full sm:aspect-video"
+		standardControls
+	>
+		{#each routes as route}
+			<GeoJSON data={createGeoJSONLayer(route)}>
+				<LineLayer layout={route.style.layout} paint={route.style.paint}></LineLayer>
+			</GeoJSON>
+			{#each route.drops as drop, index}
+				<Marker lngLat={drop.location}>
+					<span style={styleToCss(drop.style)}></span>
+					{#if drop.metadata}
+						<Popup>
+							{JSON.stringify(drop.metadata)}
+						</Popup>
+					{/if}
+					<Popup openOn="hover">
+						Position on route: {index}
 					</Popup>
-				{/if}
-				<Popup openOn="hover">
-					Position on route: {index}
-				</Popup>
-			</Marker>
+				</Marker>
+			{/each}
 		{/each}
-	{/each}
-</MapLibre>
+	</MapLibre>
+</div>
 
 <style lang="scss">
 </style>
